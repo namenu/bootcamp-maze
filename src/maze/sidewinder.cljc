@@ -1,5 +1,5 @@
 (ns maze.sidewinder
-  (:require [maze.core :refer [full-grid size link-toward]]))
+  (:require [maze.core :refer [full-grid size link-toward advance]]))
 
 (defn close-out?
   "옆으로 진행하기를 멈추고 아래를 확장할 것인지?"
@@ -21,12 +21,9 @@
                                          [pos :east run])]
                  (Sidewinder. (-> output
                                   (update :grid link-toward pos dir)
-                                  (assoc :frontier [pos dir]))
+                                  (assoc :frontier [(advance pos dir)]))
                               (rest coords)
-                              new-run))
-               #_(Sidewinder. (dissoc output :frontier)
-                            nil
-                            nil))))
+                              new-run)))))
 
 (defn sidewinder [rows cols]
   (Sidewinder. {:size     [rows cols]

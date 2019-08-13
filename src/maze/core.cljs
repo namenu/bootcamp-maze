@@ -114,22 +114,6 @@
          (rand-nth0))))
 
 
-;; solving algorithms
-
-(defn dijkstra [g src]
-  (loop [frontier [src]
-         dist     0
-         dists    {src dist}]
-    (if (empty? frontier)
-      dists
-      (let [new-frontier (->> (mapcat #(linked-cells g %) frontier)
-                              (remove #(contains? dists %)))
-            new-dists    (reduce #(assoc %1 %2 (inc dist)) dists new-frontier)]
-        (recur new-frontier (inc dist) new-dists)))))
-
-
-(s/fdef print
-  :args (s/cat :grid ::grid))
 (defn print [grid]
   (with-out-str
     (let [[rows cols] (size grid)]
