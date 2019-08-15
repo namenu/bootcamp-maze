@@ -5,7 +5,9 @@
     "build:watch": "shadow-cljs watch app",
     "build": "shadow-cljs release app"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "shadow-cljs": "^2.8.47"
+  },
   "dependencies": {
     "@smooth-ui/core-sc": "^10.1.0",
     "create-react-class": "^15.6.3",
