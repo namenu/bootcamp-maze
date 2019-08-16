@@ -1,4 +1,4 @@
-(ns maze.binary-tree
+(ns maze.seq.binary-tree
   (:require [maze.core :refer [full-grid size link-toward]]))
 
 (defn choose-wall [[rows cols] [r c]]

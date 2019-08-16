@@ -1,4 +1,4 @@
-(ns maze.sidewinder
+(ns maze.seq.sidewinder
   (:require [maze.core :refer [full-grid size link-toward advance]]))
 
 (defn close-out?

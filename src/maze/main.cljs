@@ -1,37 +1,23 @@
 (ns maze.main
-  (:require [maze.core :as m]
-            [maze.generator :refer [algorithms]]
+  (:require [maze.generator :refer [algorithms]]
             [maze.graph :refer [dijkstra]]
+            [maze.rendition :refer [*state bootstrap redraw play-note]]
 
             [reagent.core :as r]
             ["@smooth-ui/core-sc" :refer [Normalize Grid Row Col Box Button FormCheck Checkbox FormCheckLabel]]
 
-            [cljs.core.async :refer [chan close! <! >! timeout]]
-            ["p5" :as p5]
-            ["tone" :as Tone])
+            [cljs.core.async :refer [chan close! <! >!]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 
 (defonce maze-size (r/atom [17 17]))
-(defonce step-delay (r/atom 25))
 (defonce sound (r/atom true))
-(def ^:dynamic *cell-size* 20)
-
-(defonce synth (.toMaster (Tone/Synth.)))
-
-(defonce *state (atom {:ch-in    nil
-                       :mseq     nil
-                       :output   nil}))
+(defonce step-delay (r/atom 25))
 
 (defn sleep [ms]
   (let [c (chan)]
     (js/setTimeout (fn [] (close! c)) ms)
     c))
-
-(defn play-note [[r c]]
-  (let [max-val (- (apply + @maze-size) 2)
-        note    (js/map (+ r c) 0 max-val 110 1760)]
-    (.triggerAttackRelease synth note "8n")))
 
 (defn do-update [ch-in]
   (go-loop [[cmd arg] (<! ch-in)]
@@ -43,10 +29,9 @@
         :step (when-let [m (first (:mseq @*state))]
                 (swap! *state assoc :output m)
                 (swap! *state update :mseq rest)
-                (js/redraw)
+                (redraw)
                 (when (and @sound (:frontier m))
-                  (play-note (first (:frontier m))))
-                (<! (sleep @step-delay)))
+                  (play-note (first (:frontier m)))))
 
         :solve (let [start-pos arg]
                  (when-let [m (last (:mseq @*state))]
@@ -56,11 +41,11 @@
                  (let [grid (get-in @*state [:output :grid])
                        distmap (dijkstra grid start-pos)]
                    (swap! *state assoc-in [:output :distmap] distmap)
-                   (js/redraw)))
+                   (redraw)))
 
         :finish (do
                   (swap! *state assoc-in [:output :frontier] nil)
-                  (js/redraw))
+                  (redraw))
 
         "default")
       (recur (<! ch-in)))))
@@ -69,21 +54,22 @@
   ; stop
   (when-let [c (:ch-in @*state)]
     (close! c))
-  (when-let [c (:process @*state)]
-    (close! c))
   (swap! *state assoc :output nil)
 
   ; start
   (let [ch (chan)]
     (swap! *state assoc :ch-in ch)
-    (swap! *state assoc :process (do-update ch))
+    (do-update ch)
     (go
       (>! ch [:init (algorithms algorithm)])
+      
+      ;; we must ensure (:mseq @*state) is created before go into the loop,
+      ;; and injecting dummy event (:block) would do.
       (>! ch [:block])
       (loop []
-        (when (:mseq @*state)
-          (if (>! ch [:step])
-            (recur))))
+        (when (and (:mseq @*state) (>! ch [:step]))
+          (<! (sleep @step-delay))
+          (recur)))
       (>! ch [:finish]))))
 
 (defn solve [start-pos]
@@ -91,77 +77,7 @@
     (go
       (>! c [:solve start-pos]))))
 
-;; UI & rendering
-
-(defn setup []
-  (js/createCanvas js/windowWidth js/windowHeight)
-  (js/noLoop))
-
-(defn window-resized []
-  (js/resizeCanvas js/windowWidth js/windowHeight))
-
-(defn draw-grid [[rows cols] grid cell-size]
-  (js/stroke 0)
-  (js/strokeWeight 1)
-  (dorun
-    (for [r (range rows) c (range cols)
-          :let [x1 (* cell-size c)
-                y1 (* cell-size r)
-                x2 (* cell-size (inc c))
-                y2 (* cell-size (inc r))]]
-      (doseq [[dir p1p2] [[:north [x1 y2 x2 y2]]
-                          [:west [x1 y1 x1 y2]]
-                          [:east [x2 y1 x2 y2]]
-                          [:south [x1 y1 x2 y1]]]
-              :when (not (m/linked? grid [r c] dir))]
-        (apply js/line p1p2)))))
-
-(defn draw-distmap [[rows cols] distmap cell-size]
-  (let [max-depth (apply max (vals distmap))]
-    (js/noStroke)
-    (dorun
-      (for [r (range rows) c (range cols)
-            :let [x     (* cell-size c)
-                  y     (* cell-size r)
-                  dist  (distmap [r c])
-                  color (js/map dist 0 max-depth 0 255)]]
-        (do
-          (js/fill 255 60 60 color)
-          (js/rect x y cell-size cell-size))))))
-
-(defn draw-frontier [[[r c] dir] cell-size]
-  (let [x1   (* cell-size c)
-        y1   (* cell-size r)
-        x2   (* cell-size (inc c))
-        y2   (* cell-size (inc r))
-        p1p2 ({:north [x1 y2 x2 y2]
-               :west  [x1 y1 x1 y2]
-               :east  [x2 y1 x2 y2]
-               :south [x1 y1 x2 y1]}
-              dir)]
-    (js/fill 255 0 0 128)
-    (js/rect x1 y1 cell-size cell-size)
-    #_(js/stroke 255 0 0)
-    #_(js/strokeWeight 2)
-    #_(apply js/line p1p2)))
-
-(defn draw []
-  (js/background 255)
-
-  (js/translate 10 10)
-  (let [{:keys [grid frontier distmap]} (:output @*state)
-        size (m/size grid)]
-    (when distmap
-      (draw-distmap size distmap *cell-size*))
-    (draw-grid size grid *cell-size*)
-    (when frontier
-      (draw-frontier frontier *cell-size*))))
-
-
-(doto js/window
-  (aset "setup" setup)
-  (aset "draw" draw)
-  (aset "windowResized" window-resized))
+;; UI
 
 (comment
   (defonce fps (r/atom 0))
@@ -238,12 +154,12 @@
          :size     "sm"
          :mr       "5px"
          :on-click (fn [_]
-                     (solve pos)
-                     (js/redraw))}
+                     (solve pos))}
         name])]))
 
 
 (defn ^:export run []
+  (bootstrap)
   (r/render [:<>
              [:> Row
               [:> Col

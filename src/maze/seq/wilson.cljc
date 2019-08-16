@@ -1,4 +1,4 @@
-(ns maze.wilson
+(ns maze.seq.wilson
   (:require [maze.core :refer [full-grid all-pos rand-pos neighbor-dirs advance link-cells]]))
 
 (defn- get-path [grid unvisited]

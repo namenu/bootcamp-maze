@@ -1,4 +1,4 @@
-(ns maze.aldous-broder
+(ns maze.seq.aldous-broder
   (:require [maze.core :refer [full-grid rand-pos neighbor-dirs advance linked-cells link-toward]]))
 
 (deftype ^:private AldousBroder [output cur-pos unvisited counter]

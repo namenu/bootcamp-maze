@@ -1,4 +1,4 @@
-(ns maze.recursive-backtracker
+(ns maze.seq.recursive-backtracker
   (:require [maze.core :refer [full-grid rand-pos all-pos rand-neighbor link-cells]]))
 
 (deftype ^:private RecursiveBacktracker [output stack unvisited]

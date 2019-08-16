@@ -1,4 +1,4 @@
-(ns maze.kruskal
+(ns maze.seq.kruskal
   (:require [maze.core :refer [full-grid advance link-toward]]
             [clojure.set :refer [union]]))
 

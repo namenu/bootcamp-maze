@@ -1,11 +1,11 @@
 (ns maze.generator
-  (:require [maze.binary-tree :refer [binary-tree]]
-            [maze.sidewinder :refer [sidewinder]]
-            [maze.aldous-broder :refer [aldous-broder]]
-            [maze.wilson :refer [wilson]]
-            [maze.hunt-and-kill :refer [hunt-and-kill]]
-            [maze.recursive-backtracker :refer [recursive-backtracker]]
-            [maze.kruskal :refer [kruskal]]))
+  (:require [maze.seq.binary-tree :refer [binary-tree]]
+            [maze.seq.sidewinder :refer [sidewinder]]
+            [maze.seq.aldous-broder :refer [aldous-broder]]
+            [maze.seq.wilson :refer [wilson]]
+            [maze.seq.hunt-and-kill :refer [hunt-and-kill]]
+            [maze.seq.recursive-backtracker :refer [recursive-backtracker]]
+            [maze.seq.kruskal :refer [kruskal]]))
 
 (def algorithms {:binary-tree           ["Binary Tree" binary-tree]
                  :sidewinder            ["Sidewinder" sidewinder]

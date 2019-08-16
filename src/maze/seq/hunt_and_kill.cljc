@@ -1,4 +1,4 @@
-(ns maze.hunt-and-kill
+(ns maze.seq.hunt-and-kill
   (:require [maze.core :refer [full-grid rand-pos all-pos neighbor-cells rand-neighbor link-cells]]))
 
 (defn find-first [pred coll]
