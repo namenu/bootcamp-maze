@@ -1,10 +1,5 @@
 (ns maze.core
-  (:refer-clojure :exclude [print])
-  (:require [cljs.spec.alpha :as s]))
-
-(s/def ::dir #{:north :south :east :west})
-(s/def ::pos (s/tuple int? int?))
-(s/def ::grid map?)
+  (:refer-clojure :exclude [print]))
 
 (def dirs {:north [1 0]
            :south [-1 0]
@@ -26,6 +21,18 @@
                {[i j] #{}}))
     {:size [rows cols]}))
 
+(defn empty-grid [rows cols]
+  (with-meta
+    (into {} (for [r (range rows)
+                   c (range cols)
+                   :let [walls (cond-> #{}
+                                       (> r 0) (conj :south)
+                                       (> c 0) (conj :west)
+                                       (< r (dec rows)) (conj :north)
+                                       (< c (dec cols)) (conj :east))]]
+               {[r c] walls}))
+    {:size [rows cols]}))
+
 (defn size [grid]
   (:size (meta grid)))
 
@@ -38,10 +45,6 @@
 (defn linked-dirs [grid pos]
   (grid pos))
 
-(s/fdef advance
-  :args (s/cat :pos ::pos
-               :dir ::dir)
-  :ret ::pos)
 (defn advance [pos dir]
   (mapv + pos (dirs dir)))
 
@@ -54,11 +57,6 @@
       (break-wall pos dir)
       (break-wall (advance pos dir) (opposite-dirs dir))))
 
-(s/fdef link-cells
-  :args (s/cat :grid ::grid
-               :pos ::pos
-               :neighbor ::pos)
-  :ret ::grid)
 (defn link-cells [grid pos neighbor]
   (let [v   (mapv - neighbor pos)
         dir (get {[1 0]  :north
@@ -70,24 +68,19 @@
         (break-wall pos dir)
         (break-wall neighbor (opposite-dirs dir)))))
 
+(defn unlink-toward [grid pos dir]
+  (let [unbreak-wall (fn [grid pos dir]
+                       (update grid pos disj dir))]
+    (-> grid
+        (unbreak-wall pos dir)
+        (unbreak-wall (advance pos dir) (opposite-dirs dir)))))
 
-(s/fdef linked?
-  :args (s/cat :grid ::grid
-               :pos ::pos
-               :dir ::dir)
-  :ret boolean?)
 (defn linked? [grid pos dir]
   (contains? (linked-dirs grid pos) dir))
 
-
-(s/fdef linked-cells
-  :args (s/cat :grid ::grid
-               :pos ::pos)
-  :ret (s/coll-of ::pos))
 (defn linked-cells [grid pos]
   (let [neighbor #(advance pos %)]
     (map neighbor (linked-dirs grid pos))))
-
 
 (defn neighbor-dirs [grid [r c]]
   (let [[rows cols] (size grid)]

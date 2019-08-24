@@ -5,7 +5,8 @@
             [maze.seq.wilson :refer [wilson]]
             [maze.seq.hunt-and-kill :refer [hunt-and-kill]]
             [maze.seq.recursive-backtracker :refer [recursive-backtracker]]
-            [maze.seq.kruskal :refer [kruskal]]))
+            [maze.seq.kruskal :refer [kruskal]]
+            [maze.seq.recursive-division :refer [recursive-division]]))
 
 (def algorithms {:binary-tree           ["Binary Tree" binary-tree]
                  :sidewinder            ["Sidewinder" sidewinder]
@@ -13,4 +14,5 @@
                  :wilson                ["Wilson" wilson]
                  :hunt-and-kill         ["Hunt-and-Kill" hunt-and-kill]
                  :recursive-backtracker ["Recursive Backtracker" recursive-backtracker]
-                 :kruskal               ["Kruskal" kruskal]})
+                 :kruskal               ["Kruskal" kruskal]
+                 :recursive-division    ["Recursive Division" recursive-division]})
