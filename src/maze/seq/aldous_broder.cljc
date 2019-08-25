@@ -7,8 +7,8 @@
 
   ISeq
   (-first [_] output)
-  (-rest [_] (when (and (pos? unvisited)
-                        (pos? counter))
+  (-rest [_] (if (and (pos? unvisited)
+                      (pos? counter))
                (let [grid     (:grid output)
                      next-dir (rand-nth (neighbor-dirs grid cur-pos))
                      next-pos (advance cur-pos next-dir)]

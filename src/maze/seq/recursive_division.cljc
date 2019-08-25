@@ -5,8 +5,15 @@
 (declare divide-vertically)
 (declare divide-horizontally)
 
-(defn divide [[row col height width :as area]]
-  (when (and (> width 1) (> height 1))
+(def room-height 5)
+(def room-width 5)
+
+(defn divisible? [height width]
+  (let [room? #(and (< height room-height) (< width room-width) (zero? (rand-int 4)))]
+   (and (> height 1) (> width 1) (not (room?)))))
+
+(defn divide [[_ _ height width :as area]]
+  (if (divisible? height width)
     (if (>= width height)
       (divide-vertically area)
       (divide-horizontally area))))
@@ -47,7 +54,7 @@
   ISeq
   (-first [_] output)
   (-rest [_]
-    (when-let [wall (first walls)]
+    (if-let [wall (first walls)]
       (RecursiveDivision. (-> output
                               (update :grid #(apply unlink-toward % wall))
                               (assoc :frontier wall))

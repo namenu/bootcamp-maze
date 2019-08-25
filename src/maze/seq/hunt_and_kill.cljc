@@ -15,7 +15,7 @@
 
   ISeq
   (-first [_] output)
-  (-rest [_] (when-not (empty? unvisited)
+  (-rest [_] (if-not (empty? unvisited)
                (let [grid (:grid output)]
                  (if-let [new-pos (rand-neighbor grid cur-pos unvisited)]
                    (HuntAndKill. (-> output

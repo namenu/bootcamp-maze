@@ -14,7 +14,7 @@
 
   ISeq
   (-first [_] output)
-  (-rest [_] (when-let [pos (first coords)]
+  (-rest [_] (if-let [pos (first coords)]
                (let [run (conj run pos)
                      [pos dir new-run] (if (close-out? (:size output) pos)
                                          [(rand-nth run) :north []]

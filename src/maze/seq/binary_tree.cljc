@@ -13,7 +13,7 @@
 
   ISeq
   (-first [_] output)
-  (-rest [_] (when-let [pos (first nodes)]
+  (-rest [_] (if-let [pos (first nodes)]
                (let [dir (choose-wall (:size output) pos)]
                  (BinaryTree. (-> output
                                   (update :grid link-toward pos dir)

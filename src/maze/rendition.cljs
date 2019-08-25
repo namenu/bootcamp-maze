@@ -70,6 +70,7 @@
                :east  [x2 y1 x2 y2]
                :south [x1 y1 x2 y1]}
               dir)]
+    (js/noStroke)
     (js/fill 255 0 0 128)
     (js/rect x1 y1 cell-size cell-size)
     #_(js/stroke 255 0 0)

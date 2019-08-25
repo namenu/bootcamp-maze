@@ -7,7 +7,7 @@
 
   ISeq
   (-first [_] output)
-  (-rest [_] (when-not (empty? unvisited)
+  (-rest [_] (if-not (empty? unvisited)
                (let [cur-pos (peek stack)]
                  (if-let [new-pos (rand-neighbor (:grid output) cur-pos unvisited)]
                    (RecursiveBacktracker. (-> output
