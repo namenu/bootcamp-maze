@@ -28,7 +28,7 @@
       (let [[from to] (first path)]
         (Wilson. (-> output
                      (update :grid link-cells from to)
-                     (assoc :frontier [from]))
+                     (assoc :frontier [to]))
                  (disj unvisited from)
                  (rest path)))
 

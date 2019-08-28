@@ -15,7 +15,7 @@
                  (if (empty? (linked-cells grid next-pos))  ; single cell?
                    (AldousBroder. (-> output
                                       (update :grid link-toward cur-pos next-dir)
-                                      (assoc :frontier [cur-pos next-dir]))
+                                      (assoc :frontier [next-pos]))
                                   next-pos
                                   (dec unvisited)
                                   (dec counter))

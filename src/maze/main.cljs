@@ -1,7 +1,8 @@
 (ns maze.main
   (:require [maze.generator :refer [algorithms]]
             [maze.graph :refer [dijkstra]]
-            [maze.rendition :refer [*state *history bootstrap redraw play-note]]
+            [maze.state :refer [*state *history]]
+            [maze.rendition :refer [bootstrap redraw play-note]]
 
             [reagent.core :as r]
             ["@smooth-ui/core-sc" :as sc]
@@ -25,8 +26,9 @@
     (when cmd
       (case cmd
         :init (let [[_ seq-fn] arg]
+                (swap! *state assoc :mseq (apply seq-fn @maze-size))
                 (reset! *history [])
-                (swap! *state assoc :mseq (apply seq-fn @maze-size)))
+                (reset! seek-index nil))
 
         :step (when-let [m (first (:mseq @*state))]
                 (swap! *state assoc :output m)
@@ -48,7 +50,7 @@
 
         :finish (do
                   (swap! *state assoc-in [:output :frontier] nil)
-                  (reset! seek-index (count @*history))
+                  (reset! seek-index (dec (count @*history)))
                   (redraw))
 
         "default")
@@ -80,9 +82,6 @@
   (when-let [c (:ch-in @*state)]
     (go
       (>! c [:solve start-pos]))))
-
-(defn finished? []
-  (and (pos? (count @*history)) (nil? (:mseq @*state))))
 
 (defn time-travel [idx]
   (reset! seek-index idx)
@@ -146,18 +145,17 @@
    :c  [(quot r 2) (quot c 2)]})
 
 (defn timeline-slider []
-  (let [attrs (if (finished?)
-                {:value @seek-index :min 0 :max (dec (count @*history))}
-                {:disabled true :value 1 :min 0 :max 1})]
-    [:> sc/FormGroup
-     [:> sc/Label "Playback:"]
-     [:> sc/Input (merge {:control   true
-                          :type      "range"
-                          :style     {:width "350px"}
-                          :on-change (fn [e]
-                                       (let [v (.. e -target -value)]
-                                         (time-travel (js/parseInt v))))}
-                         attrs)]]))
+  [:> sc/FormGroup
+   [:> sc/Label "Playback:"]
+   [:> sc/Input (merge {:control   true
+                        :type      "range"
+                        :style     {:width "350px"}
+                        :on-change (fn [e]
+                                     (let [v (.. e -target -value)]
+                                       (time-travel (js/parseInt v))))}
+                       (if @seek-index
+                         {:value @seek-index :min 0 :max (dec (count @*history))}
+                         {:disabled true :value 1 :min 0 :max 1}))]])
 
 (defn dashboard []
   (fn []
@@ -200,11 +198,16 @@
 
 
 (defn ^:export run []
-  (bootstrap)
   (r/render [:<>
              [:> sc/Row
               [:> sc/Col
                [dashboard]]]]
             (.getElementById js/document "app")))
 
-(run)
+(defn ^:export init []
+  (bootstrap)
+  (run))
+
+(defn ^:dev/after-load start []
+  (run)
+  (redraw))
