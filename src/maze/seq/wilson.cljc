@@ -1,5 +1,6 @@
 (ns maze.seq.wilson
-  (:require [maze.core :refer [full-grid all-pos rand-pos neighbor-dirs advance link-cells]]))
+  (:require [maze.core :refer [full-grid all-pos rand-pos neighbor-dirs advance link-cells]])
+  (:require-macros [maze.seq.macros :refer [defmaze]]))
 
 (defn- get-path [grid unvisited]
   (loop [cur-pos (rand-nth (seq unvisited))
@@ -16,28 +17,22 @@
 (defn- add-path [grid path]
   (reduce #(apply link-cells %1 %2) grid (partition 2 1 path)))
 
-(deftype ^:private Wilson [output unvisited path]
-  ISeqable
-  (-seq [this] this)
+(defmaze Wilson [output unvisited path]
+  (cond
+    (seq path)
+    (let [[from to] (first path)]
+      (Wilson. (-> output
+                   (update :grid link-cells from to)
+                   (assoc :frontier [to]))
+               (disj unvisited from)
+               (rest path)))
 
-  ISeq
-  (-first [_] output)
-  (-rest [_]
-    (cond
-      (seq path)
-      (let [[from to] (first path)]
-        (Wilson. (-> output
-                     (update :grid link-cells from to)
-                     (assoc :frontier [to]))
-                 (disj unvisited from)
-                 (rest path)))
-
-      (seq unvisited)
-      (let [path (get-path (:grid output) unvisited)]
-        (Wilson. (-> output
-                     (assoc :frontier [(first path)]))
-                 unvisited
-                 (partition 2 1 path))))))
+    (seq unvisited)
+    (let [path (get-path (:grid output) unvisited)]
+      (Wilson. (-> output
+                   (assoc :frontier [(first path)]))
+               unvisited
+               (partition 2 1 path)))))
 
 (defn wilson
   "loop-erasing path finder"

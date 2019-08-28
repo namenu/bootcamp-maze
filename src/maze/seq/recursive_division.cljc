@@ -1,6 +1,7 @@
 (ns maze.seq.recursive-division
   (:refer-clojure :exclude [divide])
-  (:require [maze.core :refer [empty-grid unlink-toward print]]))
+  (:require [maze.core :refer [empty-grid unlink-toward print]])
+  (:require-macros [maze.seq.macros :refer [defmaze]]))
 
 (declare divide-vertically)
 (declare divide-horizontally)
@@ -47,18 +48,12 @@
             :when (not= col' passage-c)]
         [[axis col'] :north]))))
 
-(deftype ^:private RecursiveDivision [output walls]
-  ISeqable
-  (-seq [this] this)
-
-  ISeq
-  (-first [_] output)
-  (-rest [_]
-    (if-let [wall (first walls)]
-      (RecursiveDivision. (-> output
-                              (update :grid #(apply unlink-toward % wall))
-                              (assoc :frontier wall))
-                          (rest walls)))))
+(defmaze RecursiveDivision [output walls]
+  (if-let [wall (first walls)]
+    (RecursiveDivision. (-> output
+                            (update :grid #(apply unlink-toward % wall))
+                            (assoc :frontier wall))
+                        (rest walls))))
 
 (defn recursive-division [rows cols]
   (let [div-seq (divide [0 0 rows cols])

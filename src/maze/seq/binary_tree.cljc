@@ -1,5 +1,6 @@
 (ns maze.seq.binary-tree
-  (:require [maze.core :refer [full-grid size link-toward]]))
+  (:require [maze.core :refer [full-grid size link-toward]])
+  (:require-macros [maze.seq.macros :refer [defmaze]]))
 
 (defn choose-wall [[rows cols] [r c]]
   (let [walls (cond-> []
@@ -7,18 +8,13 @@
                 (< c (dec cols)) (conj :east))]
     (rand-nth walls)))
 
-(deftype ^:private BinaryTree [output nodes]
-  ISeqable
-  (-seq [this] this)
-
-  ISeq
-  (-first [_] output)
-  (-rest [_] (if-let [pos (first nodes)]
-               (let [dir (choose-wall (:size output) pos)]
-                 (BinaryTree. (-> output
-                                  (update :grid link-toward pos dir)
-                                  (assoc :frontier [pos dir]))
-                              (rest nodes))))))
+(defmaze BinaryTree [output nodes]
+  (if-let [pos (first nodes)]
+    (let [dir (choose-wall (:size output) pos)]
+      (BinaryTree. (-> output
+                       (update :grid link-toward pos dir)
+                       (assoc :frontier [pos dir]))
+                   (rest nodes)))))
 
 (defn binary-tree [rows cols]
   (BinaryTree. {:size     [rows cols]

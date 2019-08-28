@@ -1,5 +1,6 @@
 (ns maze.seq.prim
-  (:require [maze.core :refer [print size full-grid rand-pos neighbor-cells link-cells]]))
+  (:require [maze.core :refer [print size full-grid rand-pos neighbor-cells link-cells]])
+  (:require-macros [maze.seq.macros :refer [defmaze]]))
 
 (def map-vec (partial map vector))
 
@@ -15,24 +16,18 @@
         (recur (dissoc edges w))
         [[src dst] (dissoc edges w)]))))
 
-(deftype ^:private SimplifiedPrim [output edges visited]
-  ISeqable
-  (-seq [this] this)
-
-  ISeq
-  (-first [_] output)
-  (-rest [_]
-    (let [grid (:grid output)]
-      (if (< visited (size grid))
-        (if-let [[[src dst] edges'] (select-unvisited edges visited)]
-          (let [edges'   (->> (neighbor-cells grid dst)
-                              (remove #(contains? visited %))
-                              (map vector (repeat dst))
-                              (reduce add-edge edges'))
-                visited' (conj visited dst)]
-            (SimplifiedPrim. (-> output
-                                 (update :grid link-cells src dst)
-                                 (assoc :frontier [dst])) edges' visited')))))))
+(defmaze SimplifiedPrim [output edges visited]
+  (let [grid (:grid output)]
+    (if (< visited (size grid))
+      (if-let [[[src dst] edges'] (select-unvisited edges visited)]
+        (let [edges'   (->> (neighbor-cells grid dst)
+                            (remove #(contains? visited %))
+                            (map vector (repeat dst))
+                            (reduce add-edge edges'))
+              visited' (conj visited dst)]
+          (SimplifiedPrim. (-> output
+                               (update :grid link-cells src dst)
+                               (assoc :frontier [dst])) edges' visited'))))))
 
 (defn simplified-prim [rows cols]
   (let [grid (full-grid rows cols)

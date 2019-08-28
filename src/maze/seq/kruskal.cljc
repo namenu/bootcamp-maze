@@ -1,6 +1,7 @@
 (ns maze.seq.kruskal
   (:require [maze.core :refer [full-grid advance link-toward]]
-            [clojure.set :refer [union]]))
+            [clojure.set :refer [union]])
+  (:require-macros [maze.seq.macros :refer [defmaze]]))
 
 (defn find-tree [forest node]
   (first (filter #(% node) forest)))
@@ -15,24 +16,18 @@
           (disj t2)
           (conj (union t1 t2))))))
 
-(deftype ^:private Kruskal [output forest edges]
-  ISeqable
-  (-seq [this] this)
-
-  ISeq
-  (-first [_] output)
-  (-rest [_]
-    (if (> (count forest) 1)
-      (loop [forest forest
-             [e & edges'] edges]
-        (if-let [forest' (span-tree forest e)]
-          (let [[u dir] e]
-            (Kruskal. (-> output
-                          (update :grid link-toward u dir)
-                          (assoc :frontier [u]))
-                      forest'
-                      edges'))
-          (recur forest edges'))))))
+(defmaze Kruskal [output forest edges]
+  (if (> (count forest) 1)
+    (loop [forest forest
+           [e & edges'] edges]
+      (if-let [forest' (span-tree forest e)]
+        (let [[u dir] e]
+          (Kruskal. (-> output
+                        (update :grid link-toward u dir)
+                        (assoc :frontier [u]))
+                    forest'
+                    edges'))
+        (recur forest edges')))))
 
 (defn kruskal [rows cols]
   (let [grid     (full-grid rows cols)
