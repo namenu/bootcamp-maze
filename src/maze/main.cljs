@@ -1,20 +1,14 @@
 (ns maze.main
   (:require [maze.generator :refer [algorithms]]
             [maze.graph :refer [dijkstra]]
-            [maze.state :refer [*state *history]]
-            [maze.rendition :refer [bootstrap redraw play-note]]
+            [maze.state :refer [*state *history step-delay maze-size seek-index style sound]]
+            [maze.rendition :refer [bootstrap redraw play-note styles]]
 
             [reagent.core :as r]
             ["@smooth-ui/core-sc" :as sc]
 
             [cljs.core.async :refer [chan close! <! >!]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-
-(defonce maze-size (r/atom [17 17]))
-(defonce sound (r/atom true))
-(defonce step-delay (r/atom 25))
-(defonce seek-index (r/atom nil))
 
 (defn sleep [ms]
   (let [c (chan)]
@@ -25,8 +19,9 @@
   (go-loop [[cmd arg] (<! ch-in)]
     (when cmd
       (case cmd
-        :init (let [[_ seq-fn] arg]
-                (swap! *state assoc :mseq (apply seq-fn @maze-size))
+        :init (let [{:keys [algorithm maze-size]} arg
+                    [_ seq-fn] (algorithms algorithm)]
+                (swap! *state assoc :mseq (apply seq-fn maze-size))
                 (reset! *history [])
                 (reset! seek-index nil))
 
@@ -50,13 +45,14 @@
 
         :finish (do
                   (swap! *state assoc-in [:output :frontier] nil)
+                  (swap! *history conj (:output @*state))
                   (reset! seek-index (dec (count @*history)))
                   (redraw))
 
         "default")
       (recur (<! ch-in)))))
 
-(defn run-solo [algorithm]
+(defn run-solo [opts]
   ; stop
   (when-let [c (:ch-in @*state)]
     (close! c))
@@ -67,7 +63,7 @@
     (swap! *state assoc :ch-in ch)
     (do-update ch)
     (go
-      (>! ch [:init (algorithms algorithm)])
+      (>! ch [:init opts])
 
       ;; we must ensure (:mseq @*state) is created before go into the loop,
       ;; and injecting dummy event (:block) would do.
@@ -133,8 +129,19 @@
 
 (defn sound-toggle []
   [:> sc/FormCheck {:inline true}
+   [:> sc/Select
+    {:defaultValue @style
+     :on-change    (fn [e]
+                     (let [v (.. e -target -value)]
+                       (reset! style (keyword v))
+                       (redraw)))}
+    (doall
+      (for [option styles]
+        ^{:key option}
+        [:option {:value option} (keyword option)]))]
    [:> sc/Checkbox {:checked   @sound
                     :on-change (fn [_] (swap! sound not))}]
+
    [:> sc/FormCheckLabel "Sound"]])
 
 (defn starting-points [[r c]]
@@ -157,8 +164,9 @@
                          {:value @seek-index :min 0 :max (dec (count @*history))}
                          {:disabled true :value 1 :min 0 :max 1}))]])
 
-(defn dashboard []
-  (fn []
+(defn ui []
+  [:> sc/Row
+   [:> sc/Col
     [:<>
      [:> sc/Typography {:as :h2} "Maze generator"]
 
@@ -170,7 +178,8 @@
          [:> sc/Button
           {:size     "sm"
            :mr       1
-           :on-click #(run-solo alg)}
+           :on-click #(run-solo {:algorithm alg
+                                 :maze-size @maze-size})}
           text])]
 
       [:> sc/Box {:mt 1}
@@ -194,20 +203,13 @@
        (str "Step delay: " @step-delay "ms")]
       [delay-slider 0 50]]
 
-     [timeline-slider]]))
+     [timeline-slider]]]])
 
-
-(defn ^:export run []
-  (r/render [:<>
-             [:> sc/Row
-              [:> sc/Col
-               [dashboard]]]]
-            (.getElementById js/document "app")))
-
-(defn ^:export init []
-  (bootstrap)
-  (run))
 
 (defn ^:dev/after-load start []
-  (run)
+  (r/render [ui] (.getElementById js/document "app"))
   (redraw))
+
+(defn init []
+  (bootstrap)
+  (r/render [ui] (.getElementById js/document "app")))

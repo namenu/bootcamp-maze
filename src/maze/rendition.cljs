@@ -2,11 +2,13 @@
   (:require ["p5" :as p5]
             ["tone" :as Tone]
             [maze.core :as m]
-            [maze.state :refer [*state]]))
+            [maze.state :refer [*state style]]))
 
 ;; Tone.js
+(def oscillator "triangle" #_"sine4")
+
 (def synth (let [synth (Tone/Synth.)]
-             (set! (.. synth -oscillator -type) "sine4")
+             (set! (.. synth -oscillator -type) oscillator)
              (.toMaster synth)))
 
 (defn play-note [[r c]]
@@ -19,8 +21,9 @@
 ;; p5.js
 (def cell-size 20)
 (def wall-width 2)
-(def padding 2)
-(def ^:dynamic *style* :light)
+(def padding 4)
+
+(def styles [:normal :outline :light :heavy])
 
 (defn setup []
   (js/createCanvas js/windowWidth js/windowHeight)
@@ -64,6 +67,50 @@
                             [:south [(+ x1 padding) y1 (- cell-size (* padding 2)) padding]]]
                 :when (m/linked? grid [r c] dir)]
           (apply js/rect p1p2))))))
+
+(defn h-line [x y l]
+  (js/line x y (+ x l) y))
+
+(defn v-line [x y l]
+  (js/line x y x (+ y l)))
+
+(defn draw-grid3 [[rows cols] grid]
+  (js/fill 0 0 100 100)
+  (js/stroke 0)
+  (js/strokeWeight wall-width)
+
+  (letfn [(draw-passage [[x1 y1 x2 y2] dir]
+            (case dir
+              :north (do
+                       (v-line (+ x1 padding) (- y2 padding) padding)
+                       (v-line (- x2 padding) (- y2 padding) padding))
+              :west (do
+                      (h-line x1 (+ y1 padding) padding)
+                      (h-line x1 (- y2 padding) padding))
+              :east (do
+                      (h-line (- x2 padding) (+ y1 padding) padding)
+                      (h-line (- x2 padding) (- y2 padding) padding))
+              :south (do
+                       (v-line (+ x1 padding) y1 padding)
+                       (v-line (- x2 padding) y1 padding))))
+          (draw-wall [[x1 y1 x2 y2] dir]
+            (let [l (- cell-size (* padding 2))]
+              (case dir
+                :north (h-line (+ x1 padding) (- y2 padding) l)
+                :south (h-line (+ x1 padding) (+ y1 padding) l)
+                :west (v-line (+ x1 padding) (+ y1 padding) l)
+                :east (v-line (- x2 padding) (+ y1 padding) l))))]
+    (dorun
+      (for [r (range rows) c (range cols)
+            :let [x1 (* cell-size c)
+                  y1 (* cell-size r)
+                  x2 (* cell-size (inc c))
+                  y2 (* cell-size (inc r))]
+            :when (not= (count (grid [r c])) 0)]
+        (doseq [dir [:west :east :north :south]]
+          (if (m/linked? grid [r c] dir)
+            (draw-passage [x1 y1 x2 y2] dir)
+            (draw-wall [x1 y1 x2 y2] dir)))))))
 
 (defn draw-distmap [[rows cols] distmap]
   (let [max-depth (apply max (vals distmap))]
@@ -109,11 +156,29 @@
     (when frontier
       (draw-frontier2 frontier))))
 
+(defmethod draw-maze :outline [{:keys [grid frontier distmap]}]
+  (let [size (m/size grid)]
+    (if distmap
+      (draw-distmap size distmap)
+      (draw-grid3 size grid))
+    (when frontier
+      (draw-frontier2 frontier))))
+
+(defmethod draw-maze :heavy [{:keys [grid frontier distmap]}]
+  (let [size (m/size grid)]
+    (if distmap
+      (draw-distmap size distmap)
+      (do
+        (draw-grid2 size grid)
+        (draw-grid3 size grid)))
+    (when frontier
+      (draw-frontier2 frontier))))
+
 (defn draw []
   (js/background 255)
 
   (js/translate 10 10)
-  (draw-maze (assoc (:output @*state) :style *style*)))
+  (draw-maze (assoc (:output @*state) :style @style)))
 
 (defn redraw []
   (js/redraw))

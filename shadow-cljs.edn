@@ -1,13 +1,14 @@
 {:source-paths
  ["src"]
- 
+
  :dependencies
  [[org.clojure/core.async "0.4.500"]
   [reagent "0.8.1"]]
- 
+
  :builds
  {:app {:target   :browser
-        :modules  {:main {:entries [maze.main]}}
+        :modules  {:main {:entries [maze.main]
+                          :init-fn maze.main/init}}
         :devtools {:http-root "public"
                    :http-port 6500}
         }}
