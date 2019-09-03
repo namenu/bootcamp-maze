@@ -7,8 +7,9 @@
 (defonce *history (r/atom []))
 
 ;; UI state
-(defonce maze-size (r/atom [17 17]))
-(defonce sound (r/atom true))
-(defonce step-delay (r/atom 25))
-(defonce seek-index (r/atom nil))
-(defonce style (r/atom :outline))
+(defonce controls (r/atom
+                    {:maze-size  [17 17]
+                     :sound      true
+                     :step-delay 25
+                     :seek-index nil
+                     :style      :outline}))

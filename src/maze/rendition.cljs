@@ -2,20 +2,24 @@
   (:require ["p5" :as p5]
             ["tone" :as Tone]
             [maze.core :as m]
-            [maze.state :refer [*state style]]))
+            [maze.state :refer [*state controls]]))
 
 ;; Tone.js
 (def oscillator "triangle" #_"sine4")
 
-(def synth (let [synth (Tone/Synth.)]
-             (set! (.. synth -oscillator -type) oscillator)
-             (.toMaster synth)))
+(defonce synth (atom nil))
+
+(defn make-synth []
+  (let [synth (Tone/Synth.)]
+    (set! (.. synth -oscillator -type) oscillator)
+    (.toMaster synth)
+    synth))
 
 (defn play-note [[r c]]
   (let [size    (m/size (get-in @*state [:output :grid]))
         max-val (- (apply + size) 2)
         note    (js/map (+ r c) 0 max-val 110 1760)]
-    (.triggerAttackRelease synth note "8n")))
+    (.triggerAttackRelease @synth note "8n")))
 
 
 ;; p5.js
@@ -178,7 +182,7 @@
   (js/background 255)
 
   (js/translate 10 10)
-  (draw-maze (assoc (:output @*state) :style @style)))
+  (draw-maze (assoc (:output @*state) :style (:style @controls))))
 
 (defn redraw []
   (js/redraw))
@@ -187,4 +191,6 @@
   (doto js/window
     (aset "setup" setup)
     (aset "draw" draw)
-    (aset "windowResized" window-resized)))
+    (aset "windowResized" window-resized))
+
+  (swap! synth make-synth))
