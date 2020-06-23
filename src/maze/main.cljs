@@ -6,10 +6,10 @@
             [maze.components.controls :refer [algorithm-buttons solve-buttons size-adjust style-changer delay-slider sound-toggle timeline-slider]]
 
             [reagent.core :as r]
+            [reagent.dom :as rdom]
             ["@smooth-ui/core-sc" :as sc]
 
-            [cljs.core.async :refer [chan close! <! >!]])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+            [clojure.core.async :refer [chan close! <! >! go go-loop]]))
 
 (defn sleep [ms]
   (let [c (chan)]
@@ -109,9 +109,9 @@
                        :on-change  time-travel}]]]])
 
 (defn ^:dev/after-load start []
-  (r/render [ui] (.getElementById js/document "app"))
+  (rdom/render [ui] (.getElementById js/document "app"))
   (redraw))
 
 (defn init []
   (bootstrap)
-  (r/render [ui] (.getElementById js/document "app")))
+  (rdom/render [ui] (.getElementById js/document "app")))

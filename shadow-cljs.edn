@@ -3,7 +3,7 @@
 
  :dependencies
  [[org.clojure/core.async "0.4.500"]
-  [reagent "0.8.1"]]
+  [reagent "0.10.0"]]
 
  :builds
  {:app {:target   :browser
