@@ -7,7 +7,7 @@
     "build": "shadow-cljs release app"
   },
   "devDependencies": {
-    "shadow-cljs": "^2.10.13"
+    "shadow-cljs": "^2.14.6"
   },
   "dependencies": {
     "@smooth-ui/core-sc": "^10.1.0",

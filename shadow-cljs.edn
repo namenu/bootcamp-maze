@@ -1,5 +1,9 @@
-{:deps     true
- :dev-http {8000 "public"}
- :builds   {:app {:target  :browser
-                  :modules {:main {:init-fn maze.ui.main/init}}}}
- :nrepl    {:port 9000}}
+{:source-paths ["src"]
+ :dependencies [[org.clojure/core.async "1.3.618"]
+                [reagent/reagent "1.0.0"]]
+
+ :dev-http     {8000 "public"}
+ :builds       {:app {:target  :browser
+                      :modules {:main {:entries [maze.ui.main]
+                                       :init-fn maze.ui.main/init}}}}
+ :nrepl        {:port 9000}}
