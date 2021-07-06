@@ -1,8 +1,8 @@
-(ns maze.rendition
+(ns maze.ui.rendition
   (:require ["p5" :as p5]
             ["tone" :as Tone]
             [maze.core :as m]
-            [maze.state :refer [*state controls]]))
+            [maze.ui.state :refer [*state controls]]))
 
 ;; Tone.js
 (def oscillator "triangle" #_"sine4")
@@ -19,7 +19,7 @@
   (let [size    (m/size (get-in @*state [:output :grid]))
         max-val (- (apply + size) 2)
         note    (js/map (+ r c) 0 max-val 110 1760)]
-    (.triggerAttackRelease @synth note "8n")))
+    (.triggerAttackRelease ^Tone/Synth @synth note "8n")))
 
 
 ;; p5.js

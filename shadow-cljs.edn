@@ -1,6 +1,5 @@
 {:deps     true
  :dev-http {8000 "public"}
  :builds   {:app {:target  :browser
-                  :modules {:main {:entries [maze.main]
-                                   :init-fn maze.main/init}}}}
+                  :modules {:main {:init-fn maze.ui.main/init}}}}
  :nrepl    {:port 9000}}

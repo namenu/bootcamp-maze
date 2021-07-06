@@ -1,11 +1,10 @@
-(ns maze.main
+(ns maze.ui.main
   (:require [maze.generator :refer [algorithms]]
             [maze.graph :refer [dijkstra]]
-            [maze.state :refer [*state *history controls]]
-            [maze.rendition :refer [bootstrap redraw styles play-note]]
-            [maze.components.controls :refer [algorithm-buttons solve-buttons size-adjust style-changer delay-slider sound-toggle timeline-slider]]
+            [maze.ui.state :refer [*state *history controls]]
+            [maze.ui.rendition :refer [bootstrap redraw styles play-note]]
+            [maze.ui.components.controls :refer [algorithm-buttons solve-buttons size-adjust style-changer delay-slider sound-toggle timeline-slider]]
 
-            [reagent.core :as r]
             [reagent.dom :as rdom]
             ["@smooth-ui/core-sc" :as sc]
 

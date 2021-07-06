@@ -1,4 +1,4 @@
-(ns maze.state
+(ns maze.ui.state
   (:require [reagent.core :as r]))
 
 (defonce *state (atom {:ch-in  nil

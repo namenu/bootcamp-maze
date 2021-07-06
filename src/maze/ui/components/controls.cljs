@@ -1,19 +1,19 @@
-(ns maze.components.controls
+(ns maze.ui.components.controls
   (:require [reagent.core :as r]
             ["@smooth-ui/core-sc" :as sc]
-            [maze.state :refer [controls]]))
+            [maze.ui.state :refer [controls]]))
 ;; UI
 
-(comment
-  (defonce fps (r/atom 0))
-  (defonce fps-updater (js/setInterval
-                         #(reset! fps (js/frameRate)) 100))
-  (defn frame-display []
-    [:div {:style {:position    "fixed"
-                   :top         "0px"
-                   :right       "0px"
-                   :line-height "1"}}
-     "FPS: " (.toFixed @fps 2)]))
+(comment)
+(defonce fps (r/atom 0))
+(defonce fps-updater (js/setInterval
+                       #(reset! fps (js/frameRate)) 100))
+(defn frame-display []
+  [:div {:style {:position    "fixed"
+                 :top         "0px"
+                 :right       "0px"
+                 :line-height "1"}}
+   "FPS: " (.toFixed @fps 2)])
 
 (defn starting-points [[r c]]
   {:lt [0 0]
@@ -99,7 +99,7 @@
 
 (defn timeline-slider [{:keys [seek-index max on-change]}]
   [:> sc/FormGroup
-   [:> sc/Label "Playback:"]
+   [:> sc/Label (str "Playback: " (or seek-index "-") " / " max)]
    [:> sc/Input (merge {:control   true
                         :type      "range"
                         :style     {:width "350px"}
