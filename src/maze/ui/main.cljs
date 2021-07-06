@@ -46,7 +46,7 @@
         :finish (do
                   (swap! *state assoc-in [:output :frontier] nil)
                   (swap! *history conj (:output @*state))
-                  (swap! controls assoc :seek-index (dec (count @*history)))
+                  (swap! controls assoc :seek-index (count @*history))
                   (redraw))
 
         "default")
@@ -104,7 +104,7 @@
      [delay-slider 0 50]
 
      [timeline-slider {:seek-index (:seek-index @controls)
-                       :max        (dec (count @*history))
+                       :length     (count @*history)
                        :on-change  time-travel}]]]])
 
 (defn ^:dev/after-load start []

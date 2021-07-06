@@ -2,18 +2,17 @@
   (:require [reagent.core :as r]
             ["@smooth-ui/core-sc" :as sc]
             [maze.ui.state :refer [controls]]))
-;; UI
 
-(comment)
-(defonce fps (r/atom 0))
-(defonce fps-updater (js/setInterval
-                       #(reset! fps (js/frameRate)) 100))
-(defn frame-display []
-  [:div {:style {:position    "fixed"
-                 :top         "0px"
-                 :right       "0px"
-                 :line-height "1"}}
-   "FPS: " (.toFixed @fps 2)])
+(comment
+  (defonce fps (r/atom 0))
+  (defonce fps-updater (js/setInterval
+                         #(reset! fps (js/frameRate)) 100))
+  (defn frame-display []
+    [:div {:style {:position    "fixed"
+                   :top         "0px"
+                   :right       "0px"
+                   :line-height "1"}}
+     "FPS: " (.toFixed @fps 2)]))
 
 (defn starting-points [[r c]]
   {:lt [0 0]
@@ -97,9 +96,9 @@
 
    [:> sc/FormCheckLabel "Sound"]])
 
-(defn timeline-slider [{:keys [seek-index max on-change]}]
+(defn timeline-slider [{:keys [seek-index length on-change]}]
   [:> sc/FormGroup
-   [:> sc/Label (str "Playback: " (or seek-index "-") " / " max)]
+   [:> sc/Label (str "Playback: " (or (dec seek-index) "-") " / " (if (zero? length) "-" (dec length)))]
    [:> sc/Input (merge {:control   true
                         :type      "range"
                         :style     {:width "350px"}
@@ -109,6 +108,6 @@
                                        (on-change idx)
                                        (swap! controls assoc :seek-index idx)))}
                        (if seek-index
-                         {:value seek-index :min 0 :max max}
+                         {:value (dec seek-index) :min 0 :max (dec length)}
                          {:disabled true :value 1 :min 0 :max 1}))]])
 

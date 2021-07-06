@@ -4,30 +4,44 @@
             [maze.core :as m]
             [maze.ui.state :refer [*state controls]]))
 
+
+(def cell-size 20)
+(def wall-width 3)
+(def padding 3)
+
+(def styles [:normal :outline :light :heavy])
+
 ;; Tone.js
-(def oscillator "triangle" #_"sine4")
-
-(defonce synth (atom nil))
-
-(defn make-synth []
+(defn make-synth [oscillator]
   (let [synth (Tone/Synth.)]
     (set! (.. synth -oscillator -type) oscillator)
     (.toMaster synth)
     synth))
 
+(defn make-membrane-synth []
+  (let [synth (Tone/MembraneSynth.)]
+    (.toMaster synth)
+    synth))
+
+(defn make-mono-synth []
+  (let [synth (Tone/MonoSynth.)]
+    (.toMaster synth)
+    synth))
+
+(def synths [(make-membrane-synth)
+             #_(make-mono-synth)
+             #_(make-synth "triangle")
+             #_(make-synth "sine4")])
+
 (defn play-note [[r c]]
   (let [size    (m/size (get-in @*state [:output :grid]))
         max-val (- (apply + size) 2)
-        note    (js/map (+ r c) 0 max-val 110 1760)]
-    (.triggerAttackRelease ^Tone/Synth @synth note "8n")))
+        note    (js/map (+ r c) 0 max-val 55 880)
+        synth   (rand-nth synths)]
+    (.triggerAttackRelease ^Tone/Synth synth note "8n")))
 
 
 ;; p5.js
-(def cell-size 20)
-(def wall-width 2)
-(def padding 4)
-
-(def styles [:normal :outline :light :heavy])
 
 (defn setup []
   (js/createCanvas js/windowWidth js/windowHeight)
@@ -126,7 +140,7 @@
                   dist  (distmap [r c])
                   color (js/map dist 0 max-depth 0 255)]]
         (do
-          (js/fill 255 60 60 color)
+          (js/fill 255 0 0 color)
           (js/rect x y cell-size cell-size))))))
 
 (defn draw-frontier [[[r c]]]
@@ -154,27 +168,27 @@
 
 (defmethod draw-maze :light [{:keys [grid frontier distmap]}]
   (let [size (m/size grid)]
-    (if distmap
-      (draw-distmap size distmap)
-      (draw-grid2 size grid))
+    (when distmap
+      (draw-distmap size distmap))
+    (draw-grid2 size grid)
     (when frontier
       (draw-frontier2 frontier))))
 
 (defmethod draw-maze :outline [{:keys [grid frontier distmap]}]
   (let [size (m/size grid)]
-    (if distmap
-      (draw-distmap size distmap)
-      (draw-grid3 size grid))
+    (when distmap
+      (draw-distmap size distmap))
+    (draw-grid3 size grid)
     (when frontier
       (draw-frontier2 frontier))))
 
 (defmethod draw-maze :heavy [{:keys [grid frontier distmap]}]
   (let [size (m/size grid)]
-    (if distmap
-      (draw-distmap size distmap)
-      (do
-        (draw-grid2 size grid)
-        (draw-grid3 size grid)))
+    (when distmap
+      (draw-distmap size distmap))
+    (do
+      (draw-grid2 size grid)
+      (draw-grid3 size grid))
     (when frontier
       (draw-frontier2 frontier))))
 
@@ -191,6 +205,4 @@
   (doto js/window
     (aset "setup" setup)
     (aset "draw" draw)
-    (aset "windowResized" window-resized))
-
-  (swap! synth make-synth))
+    (aset "windowResized" window-resized)))
